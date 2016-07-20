@@ -1,0 +1,24 @@
+{
+  "name"          : "AdvancedSocket",
+  "version"       : "1.0.0",
+  "versionDetails": "Re-organization of repo and addition of grunt workflow for linting and minifying distributable files.",
+  "description"   : "AdvancedSocket aims to help handling connectivity issues from the client side when using ColdFusion WebSocket solution.",
+  "homepage"      : "https://github.com/GiancarloGomez/AdvancedSocket",
+  "author"        : "Giancarlo Gomez",
+  "authorsite" 	  : "http://giancarlogomez.com",
+  "license"       : "MIT",
+  "main"          : "dist/advancedsocket.js",
+  "repository"    : {
+    "type"  : "git",
+    "url"   : "git@github.com:GiancarloGomez/AdvancedSocket.git"
+  },
+  "keywords": [
+    "coldfusion",
+    "websockets"
+  ],
+  "devDependencies": {
+    "grunt": "^1.0.0",
+    "grunt-contrib-jshint": "^1.0.0",
+    "grunt-contrib-uglify": "^1.0.1"
+  }
+}
