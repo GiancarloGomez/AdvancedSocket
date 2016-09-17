@@ -84,9 +84,13 @@ Makes a request to ip-api.com to request Geo Based IP data. On response or if jQ
 Loops thru your defined channels and calls the WS subscribe() function.
 - __forceReconnect__<br />
 Fired when a `FORCE-RECONNECT` message is received. Calls the WS closeConnection() and openConnection() functions which in turn when the socket is open again fires the AdvancedSocket.onOpen() function.
-- __disconnected__<br />
-Fired when a socket is disconnected. Updates the status label.
-- __connected__<br />
-Fired when the socket is connecting. Updates the status label.
-- __log__<br />
+- __setTimer__<br />
+Handles setting the timer that fires off the check connection event using window.setTimeout
+- __doLog__<br />
 Outputs console logs if debug is set to true. This can be defined with the body data-debug attribute.
+- __disconnected__ :metal: _(overwrite to customize)_<br />
+Fired when a socket is disconnected. Updates the status label.
+- __connecting__ :metal: _(overwrite to customize)_<br />
+Fired when the socket is connecting. Updates the status label.
+- __connected__ :metal: _(overwrite to customize)_<br />
+Fired when the socket is connected. Updates the status label.

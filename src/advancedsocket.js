@@ -23,11 +23,13 @@
             // Setup Listeners
             window.addEventListener('connectionerror', function(e) {
                 AdvancedSocket.doLog('AdvancedSocket : Event','connectionerror',e);
+                AdvancedSocket.setTimer(false);
                 AdvancedSocket.disconnected();
             });
 
             window.addEventListener('goodconnection', function(e) {
                 AdvancedSocket.doLog('AdvancedSocket : Event','goodconnection',e);
+                AdvancedSocket.setTimer(true);
                 AdvancedSocket.connected();
             });
 
@@ -37,8 +39,10 @@
             });
 
             window.addEventListener('offline', function(e) {
+                AdvancedSocket.setTimer(false);
                 AdvancedSocket.disconnected();
                 // if we go fully offline kill any pending timer
+                clearTimeout(AdvancedSocket.timer);
                 AdvancedSocket.doLog('AdvancedSocket : Event','offline',e);
             }, false);
 
@@ -208,10 +212,22 @@
             window[AdvancedSocket.name].openConnection();
         },
 
+        setTimer : function (isOnline){
+            AdvancedSocket.doLog('setTimer',isOnline);
+            if (isOnline === false) {
+                // speed up timer to check
+                AdvancedSocket.timerCount = AdvancedSocket.offlineTimer;
+            } else if ( AdvancedSocket.timerCount !== AdvancedSocket.onlineTimer) {
+                // return back to normal
+                AdvancedSocket.timerCount = AdvancedSocket.onlineTimer;
+            }
+        },
+
+        /*
+        * Functions that can be overwritten to customize experience
+        */
         disconnected : function(){
             AdvancedSocket.doLog('AdvancedSocket : disconnected');
-            // speed up timer to check
-            AdvancedSocket.timerCount = AdvancedSocket.offlineTimer;
             if (AdvancedSocket.statusLabel){
                 AdvancedSocket.statusLabel.className = 'alert alert-danger text-center';
                 AdvancedSocket.statusLabel.innerHTML = 'We are disconnected!!!';
@@ -228,13 +244,11 @@
 
         connected : function (){
             AdvancedSocket.doLog('AdvancedSocket : connected');
-            // return back to normal
-            AdvancedSocket.timerCount = AdvancedSocket.onlineTimer;
             if (AdvancedSocket.statusLabel){
                 AdvancedSocket.statusLabel.className = 'alert alert-success text-center';
                 AdvancedSocket.statusLabel.innerHTML = 'We are connected!!!';
             }
-        },
+        }
 
     };
 

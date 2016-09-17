@@ -1,7 +1,7 @@
 {
   "name"          : "AdvancedSocket",
-  "version"       : "1.0.0",
-  "versionDetails": "Re-organization of repo and addition of grunt workflow for linting and minifying distributable files.",
+  "version"       : "1.0.1",
+  "versionDetails": "Created setTimer() function that handles setting the timer amount against the online or offline amount. Moved out of funciton into eventListeners so user's do not forget to copy when overwriting the connected() or disconnected() functions.",
   "description"   : "AdvancedSocket aims to help handling connectivity issues from the client side when using ColdFusion WebSocket solution.",
   "homepage"      : "https://github.com/GiancarloGomez/AdvancedSocket",
   "author"        : "Giancarlo Gomez",

@@ -1,7 +1,7 @@
  // ----------------------------------------------------------------------------
  // AdvancedSocket aims to help handling connectivity issues from the client side when using ColdFusion WebSocket solution.
- // v1.0.0 - released 2016-07-19 22:17
- // Re-organization of repo and addition of grunt workflow for linting and minifying distributable files.
+ // v1.0.1 - released 2016-09-17 01:13
+ // Created setTimer() function that handles setting the timer amount against the online or offline amount. Moved out of funciton into eventListeners so user's do not forget to copy when overwriting the connected() or disconnected() functions.
  // Licensed under the MIT license.
  // https://github.com/GiancarloGomez/AdvancedSocket
  // ----------------------------------------------------------------------------
@@ -28,10 +28,12 @@ var AdvancedSocket = {
         AdvancedSocket.doLog("AdvancedSocket : init");
         window.addEventListener("connectionerror", function(e) {
             AdvancedSocket.doLog("AdvancedSocket : Event", "connectionerror", e);
+            AdvancedSocket.setTimer(false);
             AdvancedSocket.disconnected();
         });
         window.addEventListener("goodconnection", function(e) {
             AdvancedSocket.doLog("AdvancedSocket : Event", "goodconnection", e);
+            AdvancedSocket.setTimer(true);
             AdvancedSocket.connected();
         });
         window.addEventListener("requireconnection", function(e) {
@@ -39,7 +41,9 @@ var AdvancedSocket = {
             AdvancedSocket.forceReconnect();
         });
         window.addEventListener("offline", function(e) {
+            AdvancedSocket.setTimer(false);
             AdvancedSocket.disconnected();
+            clearTimeout(AdvancedSocket.timer);
             AdvancedSocket.doLog("AdvancedSocket : Event", "offline", e);
         }, false);
         window.addEventListener("online", function(e) {
@@ -163,9 +167,16 @@ var AdvancedSocket = {
         window[AdvancedSocket.name].closeConnection();
         window[AdvancedSocket.name].openConnection();
     },
+    setTimer: function(isOnline) {
+        AdvancedSocket.doLog("setTimer", isOnline);
+        if (isOnline === false) {
+            AdvancedSocket.timerCount = AdvancedSocket.offlineTimer;
+        } else if (AdvancedSocket.timerCount !== AdvancedSocket.onlineTimer) {
+            AdvancedSocket.timerCount = AdvancedSocket.onlineTimer;
+        }
+    },
     disconnected: function() {
         AdvancedSocket.doLog("AdvancedSocket : disconnected");
-        AdvancedSocket.timerCount = AdvancedSocket.offlineTimer;
         if (AdvancedSocket.statusLabel) {
             AdvancedSocket.statusLabel.className = "alert alert-danger text-center";
             AdvancedSocket.statusLabel.innerHTML = "We are disconnected!!!";
@@ -180,7 +191,6 @@ var AdvancedSocket = {
     },
     connected: function() {
         AdvancedSocket.doLog("AdvancedSocket : connected");
-        AdvancedSocket.timerCount = AdvancedSocket.onlineTimer;
         if (AdvancedSocket.statusLabel) {
             AdvancedSocket.statusLabel.className = "alert alert-success text-center";
             AdvancedSocket.statusLabel.innerHTML = "We are connected!!!";
