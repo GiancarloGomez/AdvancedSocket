@@ -1,4 +1,4 @@
-#AdvancedSocket
+# AdvancedSocket
 
 AdvancedSockets aims to help handling connectivity issues from the client side when using ColdFusion WebSocket solution.
 
