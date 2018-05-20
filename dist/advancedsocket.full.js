@@ -1,11 +1,11 @@
  // ----------------------------------------------------------------------------
  // AdvancedSocket aims to help handling connectivity issues from the client side when using ColdFusion WebSocket solution.
- // v1.0.1 - released 2016-09-17 01:13
- // Created setTimer() function that handles setting the timer amount against the online or offline amount. Moved out of funciton into eventListeners so user's do not forget to copy when overwriting the connected() or disconnected() functions.
+ // v1.0.2 - released 2018-05-19 21:02
+ // Documentation and property updates
  // Licensed under the MIT license.
  // https://github.com/GiancarloGomez/AdvancedSocket
  // ----------------------------------------------------------------------------
- // Copyright (C) 2013-2016 Giancarlo Gomez
+ // Copyright (C) 2013-2018 Giancarlo Gomez
  // http://giancarlogomez.com
  // ----------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ var AdvancedSocket = {
     reconnectTimer: (parseFloat(document.body.dataset.reconnectTimer) || .5) * 1e3,
     timerCount: 0,
     debug: JSON.parse(document.body.dataset.debug || false),
-    statusLabel: document.getElementById(document.body.dataset.statusDiv || "status-message"),
+    statusLabel: document.getElementById(document.body.dataset.statusLabel || "status-message"),
     init: function() {
         AdvancedSocket.doLog("AdvancedSocket : init");
         window.addEventListener("connectionerror", function(e) {

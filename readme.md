@@ -32,33 +32,43 @@ Below is a simple example of how to implement. The data attributes defined in th
 ## Properties / Attributes
 
 - __autoConnect__<br />
-Controls the auto connect feature of the AdvancedSocket. It defaults to true but can be managed by the data-auto-connect attribute in the body tag. It also requires a pingURL to be defined.
+Controls the auto connect feature of the AdvancedSocket.
+Defaults to `true` but can be managed by the `data-auto-connect` attribute in the body tag. It also requires a pingURL to be defined.
 - __name__<br />
-The name of your global websocket variable name. Defaults to `ws`
+The name of your global websocket variable name.
+Defaults to `ws` but can be managed by the `data-name` attribute in the body tag.
 - __channels__<br/ >
 Comma separated list of channels to subscribe to.
+Managed by the `data-channels` attribute in the body tag.
 - __clientID__<br />
 The subscriber ID returned from ColdFusion on a succesful connection. This is used when the autoConnect feature is enabled to make sure that we are still an active subscriber.
 - __clientInfo__<br />
 This is a key-value object that is passed when creating a connection. By default AdvancedSocket uses a third party request to find out additional geo-based data of the request. This is also used to pass in a username and any additional info you may want to.
 - __doMessage__<br />
 Defines the global function to run on a succesful message. Defaults to `doMessage`. If the function is not defined or does not exists a log message will be displayed (if debug is enabled).
+Defaults to `doMessage` but can be managed by the `data-do-message` attribute in the body tag.
 - __timer__<br />
 Used for the check AdvancedSocket.checkConnection setTimeout
 - __pingURL__<br />
 The URL that will be used to ping if we are still a good connection. Should return a JSON object with a success value of true or false.
+Managed by the `data-ping-url` attribute in the body tag.
 - __onlineTimer__<br />
-The timeout value to ping if autoConnect is enabled while we have a good connection. This defaults to 30 seconds and can be defined in the body data-online-timer attribute.
+The timeout value to ping if autoConnect is enabled while we have a good connection.
+Defaults to `30 seconds` but can be managed by the `data-online-timer` attribute in the body tag.
 - __offlineTimer__<br />
-The timeout value to ping if autoConnect is enabled while we have a bad connection. This defaults to 5 seconds and can be defined in the body data-offline-timer attribute.
+The timeout value to ping if autoConnect is enabled while we have a bad connection.
+Defaults to `5 seconds` but can be managed by the `data-offline-timer` attribute in the body tag.
 - __reconnectTimer__<br />
-The timeout value call a reconnect attempt when a `FORCE-RECONNECT` value is received from the server. This defaults to 500ms and can be defined in the body data-reconnect-timer attribute.
+The timeout value call a reconnect attempt when a `FORCE-RECONNECT` value is received from the server.
+Defaults to `500ms` but can be managed by the `data-reconnect-timer` attribute in the body tag.
 - __timerCount__<br />
 The timeout value that is used on reconnect calls. It is automally updated to either the online or offline value based on current state.
 - __debug__<br />
-Boolean value to display log messages. Defaults to false and can be overwritten by the data-debug body attribute.
+Boolean value to display log messages.
+Defaults to `false` but can be managed by the `data-debug` attribute in the body tag.
 - __statusLabel__<br />
 The status document element defined by an id of status-message.
+Defaults to `status-message` but can be managed by the `data-status-label` attribute in the body tag.
 
 ## Functions
 

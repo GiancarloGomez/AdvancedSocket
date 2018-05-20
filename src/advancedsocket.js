@@ -16,7 +16,7 @@
         reconnectTimer  : (parseFloat(document.body.dataset.reconnectTimer) || 0.5 ) * 1000,
         timerCount      : 0,
         debug           : JSON.parse(document.body.dataset.debug || false),
-        statusLabel     : document.getElementById(document.body.dataset.statusDiv || 'status-message'),
+        statusLabel     : document.getElementById(document.body.dataset.statusLabel || 'status-message'),
 
         init : function(){
             AdvancedSocket.doLog('AdvancedSocket : init');
