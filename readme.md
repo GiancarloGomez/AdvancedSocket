@@ -13,7 +13,7 @@ Below is a simple example of how to implement. The data attributes defined in th
  			data-online-timer="30"
  			data-offline-timer="5"
  			data-reconnect-timer=".5"
- 			data-ping="ping.cfm">
+ 			data-ping-url="ping.cfm">
  	<div id="status-message" class="hide"></div>
  	<script src="advanced.js"></script>
 	<cfwebsocket 	name		="ws"
