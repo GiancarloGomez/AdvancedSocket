@@ -138,14 +138,17 @@
             }
 
             if (obj.type === 'data'){
-                // force reconnect
-                if (obj.data === 'FORCE-RECONNECT'){
-                    window.setTimeout(AdvancedSocket.forceReconnect, AdvancedSocket.reconnectTimer);
-                }
+                // do check and set key
+                if (AdvancedSocket.doMessage && !AdvancedSocket.doMessageFunc)
+                    AdvancedSocket.doMessageFunc = eval(AdvancedSocket.doMessage);
 
-                // if we defined a global doMessage function
-                if (AdvancedSocket.doMessage && typeof window[AdvancedSocket.doMessage] === 'function'){
-                    window[AdvancedSocket.doMessage](obj);
+                // force reconnect
+                if (obj.data === 'FORCE-RECONNECT')
+                    window.setTimeout(AdvancedSocket.forceReconnect, AdvancedSocket.reconnectTimer);
+
+                // if doMessageFunc exists and it is a function pass thru
+                if (AdvancedSocket.doMessageFunc && typeof AdvancedSocket.doMessageFunc === 'function'){
+                    AdvancedSocket.doMessageFunc(obj);
                 }
                 // notify user to create required notification
                 else {

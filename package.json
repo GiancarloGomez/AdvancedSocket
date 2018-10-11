@@ -1,7 +1,7 @@
 {
   "name"          : "AdvancedSocket",
-  "version"       : "1.0.2",
-  "versionDetails": "Documentation and property updates",
+  "version"       : "1.0.3",
+  "versionDetails": "Updated onMessage to allow using dot notation when passing in a function name to use",
   "description"   : "AdvancedSocket aims to help handling connectivity issues from the client side when using ColdFusion WebSocket solution.",
   "homepage"      : "https://github.com/GiancarloGomez/AdvancedSocket",
   "author"        : "Giancarlo Gomez",

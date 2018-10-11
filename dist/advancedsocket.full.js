@@ -1,7 +1,7 @@
  // ----------------------------------------------------------------------------
  // AdvancedSocket aims to help handling connectivity issues from the client side when using ColdFusion WebSocket solution.
- // v1.0.2 - released 2018-05-19 21:02
- // Documentation and property updates
+ // v1.0.3 - released 2018-05-19 22:28
+ // Updated onMessage to allow using dot notation when passing in a function name to use
  // Licensed under the MIT license.
  // https://github.com/GiancarloGomez/AdvancedSocket
  // ----------------------------------------------------------------------------
@@ -113,11 +113,10 @@ var AdvancedSocket = {
             AdvancedSocket.connected();
         }
         if (obj.type === "data") {
-            if (obj.data === "FORCE-RECONNECT") {
-                window.setTimeout(AdvancedSocket.forceReconnect, AdvancedSocket.reconnectTimer);
-            }
-            if (AdvancedSocket.doMessage && typeof window[AdvancedSocket.doMessage] === "function") {
-                window[AdvancedSocket.doMessage](obj);
+            if (AdvancedSocket.doMessage && !AdvancedSocket.doMessageFunc) AdvancedSocket.doMessageFunc = eval(AdvancedSocket.doMessage);
+            if (obj.data === "FORCE-RECONNECT") window.setTimeout(AdvancedSocket.forceReconnect, AdvancedSocket.reconnectTimer);
+            if (AdvancedSocket.doMessageFunc && typeof AdvancedSocket.doMessageFunc === "function") {
+                AdvancedSocket.doMessageFunc(obj);
             } else {
                 AdvancedSocket.doLog("AdvancedSocket : Create a doMessage function and pass it in the data-do-message attribute of the body");
             }
