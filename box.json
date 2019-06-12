@@ -1,0 +1,52 @@
+{
+    "name":"AdvancedSocket",
+    "slug":"advancedsocket",
+    "version":"1.0.3",
+    "author":"Giancarlo Gomez <giancarlo.gomez@gmail.com>",
+    "location":"GiancarloGomez/AdvancedSocket",
+    "homepage":"https://github.com/GiancarloGomez/AdvancedSocket",
+    "documentation":"https://github.com/GiancarloGomez/AdvancedSocket",
+    "bugs":"https://github.com/GiancarloGomez/AdvancedSocket/issues",
+    "changelog":"",
+    "shortDescription":"Simple JavaScript Utility aimed to help handling connectivity issues from the client side when using ColdFusion WebSocket solution",
+    "type":"projects",
+    "private":false,
+    "repository":{
+        "type":"git",
+        "URL":"https://github.com/GiancarloGomez/AdvancedSocket"
+    },
+    "keywords":[
+        "WebSockets",
+        "JavaScript"
+    ],
+    "engines":[
+        {
+            "type":"adobe",
+            "version":">=11.0.0"
+        }
+    ],
+    "contributors":[
+        {
+            "name" : "Giancarlo Gomez",
+            "email" : "giancarlo.gomez@gmail.com",
+            "url" : "https://www.giancarlogomez.dev/"
+        }
+    ],
+    "ignore":[
+        "**/.*",
+        "/test/",
+        "/tests/",
+        "node_modules/",
+        "src/",
+        "gruntfile.js",
+        "package.json",
+        "readme.md",
+        "LICENSE"
+    ],
+    "license":[
+        {
+            "type":"MIT",
+            "URL":"https://github.com/GiancarloGomez/AdvancedSocket/blob/master/LICENSE"
+        }
+    ]
+}
