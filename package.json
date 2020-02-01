@@ -1,24 +1,34 @@
 {
-  "name"          : "AdvancedSocket",
-  "version"       : "1.0.3",
+  "name": "advancedsocket",
+  "version": "1.0.3",
   "versionDetails": "Updated onMessage to allow using dot notation when passing in a function name to use",
-  "description"   : "AdvancedSocket aims to help handling connectivity issues from the client side when using ColdFusion WebSocket solution.",
-  "homepage"      : "https://github.com/GiancarloGomez/AdvancedSocket",
-  "author"        : "Giancarlo Gomez",
-  "authorsite" 	  : "http://giancarlogomez.com",
-  "license"       : "MIT",
-  "main"          : "dist/advancedsocket.js",
-  "repository"    : {
-    "type"  : "git",
-    "url"   : "git@github.com:GiancarloGomez/AdvancedSocket.git"
-  },
+  "description": "AdvancedSocket aims to help handling connectivity issues from the client side when using ColdFusion WebSocket solution.",
+  "homepage": "https://github.com/GiancarloGomez/AdvancedSocket#readme",
+  "author": "Giancarlo Gomez <giancarlo.gomez@gmail.com> (https://giancarlogomez.com/)",
+  "license": "MIT",
+  "files": [
+    "/dist"
+  ],
+  "browser": "dist/advancedsocket.min.js",
+  "repository": "github:GiancarloGomez/AdvancedSocket",
   "keywords": [
     "coldfusion",
     "websockets"
   ],
+  "funding": {
+    "type": "patreon",
+    "url": "https://www.patreon.com/giancarlogomez"
+  },
   "devDependencies": {
-    "grunt": "^1.0.0",
-    "grunt-contrib-jshint": "^1.0.0",
+    "grunt": "^1.0.4",
+    "grunt-contrib-jshint": "^1.1.0",
     "grunt-contrib-uglify": "^1.0.1"
+  },
+  "bugs": {
+    "url": "https://github.com/GiancarloGomez/AdvancedSocket/issues"
+  },
+  "dependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
