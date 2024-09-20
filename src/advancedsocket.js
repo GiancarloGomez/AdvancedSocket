@@ -2,7 +2,7 @@ const AdvancedSocketDebug = JSON.parse( document.body.dataset.debug || false );
 const AdvancedSocket = {
     debugStyle : 'color:forestGreen; font-weight:400; ',
     clientID   : 0,
-    clientInfo : { AdvancedSocket : true },
+    clientInfo : { advancedsocket : true },
     debug      : AdvancedSocketDebug,
     timer      : 0,
     timerCount : 0,
@@ -50,7 +50,7 @@ const AdvancedSocket = {
 
         this.options.channels.forEach( (value,index) => {
             this.doLog( `%cAdvancedSocket : Connecting to ${value} : ${index+1} of ${this.options.channels.length}` , this.options.debugStyle );
-            let params = { clientInfo: this.clientInfo };
+            let params = { clientinfo: this.clientInfo };
             // send username info if in clientInfo struct
             if ( this.clientInfo.username )
                 params.username = this.clientInfo.username;
