@@ -1,202 +1,364 @@
  // ----------------------------------------------------------------------------
  // AdvancedSocket aims to help handling connectivity issues from the client side when using ColdFusion WebSocket solution.
- // v1.0.3 - released 2018-05-19 22:28
+ // v2.0.0 - released 2024-10-04 23:55
  // Updated onMessage to allow using dot notation when passing in a function name to use
  // Licensed under the MIT license.
  // https://github.com/GiancarloGomez/AdvancedSocket
  // ----------------------------------------------------------------------------
- // Copyright (C) 2013-2018 Giancarlo Gomez
- // http://giancarlogomez.com
+ // Copyright (C) 2013-2024 Giancarlo Gomez <giancarlo.gomez@gmail.com> (https://giancarlogomez.dev/)
  // ----------------------------------------------------------------------------
 
-var AdvancedSocket = {
-    autoConnect: JSON.parse(document.body.dataset.autoConnect || true),
-    name: document.body.dataset.name || "ws",
-    channels: document.body.dataset.channels ? document.body.dataset.channels.split(",") : [],
-    clientID: 0,
-    clientInfo: {},
-    doMessage: document.body.dataset.doMessage || "doMessage",
-    timer: 0,
-    pingURL: document.body.dataset.pingUrl || "",
-    onlineTimer: (parseFloat(document.body.dataset.onlineTimer) || 30) * 1e3,
-    offlineTimer: (parseFloat(document.body.dataset.offlineTimer) || 5) * 1e3,
-    reconnectTimer: (parseFloat(document.body.dataset.reconnectTimer) || .5) * 1e3,
-    timerCount: 0,
-    debug: JSON.parse(document.body.dataset.debug || false),
-    statusLabel: document.getElementById(document.body.dataset.statusLabel || "status-message"),
-    init: function() {
-        AdvancedSocket.doLog("AdvancedSocket : init");
-        window.addEventListener("connectionerror", function(e) {
-            AdvancedSocket.doLog("AdvancedSocket : Event", "connectionerror", e);
-            AdvancedSocket.setTimer(false);
-            AdvancedSocket.disconnected();
-        });
-        window.addEventListener("goodconnection", function(e) {
-            AdvancedSocket.doLog("AdvancedSocket : Event", "goodconnection", e);
-            AdvancedSocket.setTimer(true);
-            AdvancedSocket.connected();
-        });
-        window.addEventListener("requireconnection", function(e) {
-            AdvancedSocket.doLog("AdvancedSocket : Event", "requireconnection", e);
-            AdvancedSocket.forceReconnect();
-        });
-        window.addEventListener("offline", function(e) {
-            AdvancedSocket.setTimer(false);
-            AdvancedSocket.disconnected();
-            clearTimeout(AdvancedSocket.timer);
-            AdvancedSocket.doLog("AdvancedSocket : Event", "offline", e);
-        }, false);
-        window.addEventListener("online", function(e) {
-            AdvancedSocket.doLog("AdvancedSocket : Event", "online", e);
-            AdvancedSocket.checkConnection();
-        }, false);
-        AdvancedSocket.timerCount = AdvancedSocket.onlineTimer;
-        AdvancedSocket.checkConnection();
+const AdvancedSocketDebug = JSON.parse( document.body.dataset.debug || false );
+const AdvancedSocket = {
+    debugStyle : 'color:OrangeRed; font-weight:400; ',
+    clientID   : 0,
+    clientInfo : { advancedsocket : true },
+    debug      : AdvancedSocketDebug,
+    timer      : 0,
+    timerCount : 0,
+    options    : {},
+    ui         : {},
+
+    init() {
+        this.doLog( '%cAdvancedSocket.init', this.debugStyle );
+
+        // set defaults
+        this.options = {
+            autoConnect  : true,
+            channels     : '',
+            doMessage    : 'doMessage',
+            name         : 'ws',
+            pingUrl      : '',
+            statusLabel  : 'status-message',
+            ipApiLookup  : false,
+            ipApiService : 'ip-api.com', // allowed values are ip-api.com, ipapi.com
+            ipApiKey     : '',           // api key for ip-api.com or ipapi.com
+            ...document.body.dataset
+        };
+
+        this.options.autoConnect    = JSON.parse( this.options.autoConnect || true );
+        this.options.ipApiLookup    = JSON.parse( this.options.ipApiLookup || false );
+        this.options.offlineTimer   = ( parseFloat( this.options.offlineTimer ) || 5 ) * 1e3;
+        this.options.onlineTimer    = ( parseFloat( this.options.onlineTimer ) || 30 ) * 1e3;
+        this.options.reconnectTimer = ( parseFloat( this.options.reconnectTimer ) || 0.5 ) * 1e3;
+        this.ui.statusLabel         = document.getElementById( this.options.statusLabel || 'status-message' );
+        this.timerCount             = this.options.onlineTimer;
+
+
+        this.setupListeners();
+        this.checkConnection();
     },
-    checkConnection: function() {
-        clearTimeout(AdvancedSocket.timer);
-        if (navigator.onLine && AdvancedSocket.pingURL !== "" && AdvancedSocket.autoConnect) {
-            AdvancedSocket.doLog("AdvancedSocket : checkConnection");
-            AdvancedSocket.timer = setTimeout(function() {
-                AdvancedSocket.ping(AdvancedSocket.pingURL);
-            }, AdvancedSocket.timerCount);
+
+    checkConnection() {
+        clearTimeout( this.timer );
+        if ( navigator.onLine && this.options.pingUrl !== '' && this.options.autoConnect ){
+            this.doLog( '%cAdvancedSocket.checkConnection', this.debugStyle );
+            this.timer = setTimeout( () => { this.ping(); } , this.timerCount );
         }
     },
-    fireEvent: function(name, data) {
-        var e = document.createEvent("Event");
-        e.initEvent(name, true, true);
-        e.data = data;
-        window.dispatchEvent(e);
+
+    dispatchEvent( name, data = {} ) {
+        this.doLog( '%cAdvancedSocket.dispatchEvent', this.debugStyle, { name, data } );
+        const event = new CustomEvent( name, {
+            detail     : data,
+            bubbles    : true,
+            cancelable : true
+        });
+        window.dispatchEvent( event );
     },
-    ping: function(url) {
-        AdvancedSocket.doLog("AdvancedSocket : ping");
-        var xhr = new XMLHttpRequest(), noResponseTimer = setTimeout(function() {
-            xhr.abort();
-            AdvancedSocket.fireEvent("connectiontimeout", {});
-        }, 5e3);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState !== 4) {
+
+    forceReconnect() {
+        this.doLog( '%cAdvancedSocket.forceReconnect', this.debugStyle );
+
+        if( typeof window[this.options.name] !== 'object' )
+            return;
+
+        window[this.options.name].closeConnection();
+        window[this.options.name].openConnection();
+    },
+
+    async getIPInfo() {
+        this.doLog( '%cAdvancedSocket.getIPInfo', this.debugStyle );
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+            controller.abort();
+            // handle timeout if needed
+        }, 5000);
+
+        try {
+            const serviceUrl = this.options.ipApiService === 'ip-api.com' ?
+                                'http://ip-api.com/json/' :
+                                `https://api.ipapi.com/api/check?access_key=${this.options.ipApiKey}`;
+
+            const response = await fetch( serviceUrl, { signal: controller.signal } );
+
+            clearTimeout( timeoutId );
+
+            if ( response.ok ) {
+                const data = await response.json();
+
+                if ( data.ip || data.query ){
+                    // response from ip-api.com ( set to ip instead of query )
+                    if ( data.query )
+                        data.ip = data.query;
+                    // clean up
+                    delete data.status;
+                    delete data.query;
+                    this.clientInfo.geo = { ...data };
+                }
+            }
+        }
+        catch (error) {
+            if ( error.name === 'AbortError' ) {
+                // Request was aborted
                 return;
             }
-            if (xhr.status === 200) {
-                if (JSON.parse(xhr.response).success === true) {
-                    AdvancedSocket.fireEvent("goodconnection", {});
-                } else {
-                    AdvancedSocket.fireEvent("requireconnection", {});
-                }
-                clearTimeout(noResponseTimer);
-            } else {
-                AdvancedSocket.fireEvent("connectionerror", {});
-            }
-            AdvancedSocket.checkConnection();
-        };
-        xhr.open("GET", url + "?id=" + AdvancedSocket.clientID + "&ts=" + new Date().getTime());
-        xhr.send();
-    },
-    onMessage: function(obj) {
-        AdvancedSocket.doLog("AdvancedSocket : onMessage", obj.type, obj.reqType, obj);
-        if (obj.reqType === "welcome") {
-            AdvancedSocket.clientID = obj.clientid;
-            AdvancedSocket.connecting();
-        }
-        if (obj.reqType === "authenticate") {
-            if (obj.code === -1) {
-                AdvancedSocket.doLog("Authentication failed");
-            } else if (obj.code === 0) {
-                AdvancedSocket.connectWS();
-                AdvancedSocket.autoConnect = true;
-                AdvancedSocket.checkConnection();
-            }
-            AdvancedSocket.connected();
-        }
-        if (obj.reqType === "subscribe") {
-            AdvancedSocket.connected();
-        }
-        if (obj.type === "data") {
-            if (AdvancedSocket.doMessage && !AdvancedSocket.doMessageFunc) AdvancedSocket.doMessageFunc = eval(AdvancedSocket.doMessage);
-            if (obj.data === "FORCE-RECONNECT") window.setTimeout(AdvancedSocket.forceReconnect, AdvancedSocket.reconnectTimer);
-            if (AdvancedSocket.doMessageFunc && typeof AdvancedSocket.doMessageFunc === "function") {
-                AdvancedSocket.doMessageFunc(obj);
-            } else {
-                AdvancedSocket.doLog("AdvancedSocket : Create a doMessage function and pass it in the data-do-message attribute of the body");
+            else {
+                // handle other errors
+                console.error('Fetch error:', error);
             }
         }
-    },
-    onOpen: function(obj) {
-        AdvancedSocket.doLog("AdvancedSocket : onOpen", obj);
-        if (window.AdvancedSocket.clientInfo.username && AdvancedSocket.autoConnect) {
-            AdvancedSocket.autoConnect = false;
-            window[AdvancedSocket.name].authenticate(window.AdvancedSocket.clientInfo.username, "");
-        }
-        AdvancedSocket.getIPInfo();
-    },
-    onClose: function(obj) {
-        AdvancedSocket.doLog("AdvancedSocket : onClose", obj);
-    },
-    onError: function(obj) {
-        AdvancedSocket.doLog("AdvancedSocket : onError", obj);
-    },
-    getIPInfo: function() {
-        AdvancedSocket.doLog("AdvancedSocket : getIPInfo");
-        if (window.jQuery && !AdvancedSocket.clientInfo.status && location.protocol !== "https:") {
-            $.getJSON("http://ip-api.com/json/", function(response) {
-                AdvancedSocket.clientInfo = response;
-                AdvancedSocket.clientInfo.userAgent = navigator.userAgent;
-                if (AdvancedSocket.autoConnect) {
-                    AdvancedSocket.connectWS();
-                }
-            });
-        } else if (AdvancedSocket.autoConnect) {
-            AdvancedSocket.connectWS();
+        finally {
+            // connect
+            if ( this.options.autoConnect )
+                this.subscribe();
         }
     },
-    connectWS: function() {
-        AdvancedSocket.doLog("AdvancedSocket : connectWS");
-        AdvancedSocket.channels.forEach(function(value, index) {
-            AdvancedSocket.doLog("AdvancedSocket : Connecting to " + value + " : " + (index + 1) + " of " + AdvancedSocket.channels.length);
-            var params = {
-                clientInfo: window.AdvancedSocket.clientInfo
-            };
-            if (window.AdvancedSocket.clientInfo.username) params.username = window.AdvancedSocket.clientInfo.username;
-            window[AdvancedSocket.name].subscribe(value, params);
+
+    handleConnectionError( event ) {
+        this.doLog( '%cAdvancedSocket.Event', this.debugStyle, { type: 'connectionerror', event } );
+        this.setTimer( false );
+        this.disconnected();
+    },
+
+    handleGoodConnection( event ) {
+        this.doLog( '%cAdvancedSocket.Event', this.debugStyle, { type: 'goodconnection', event } );
+        this.setTimer( true );
+        this.connected();
+    },
+
+    handleRequireConnection( event ) {
+        this.doLog( '%cAdvancedSocket.Event', this.debugStyle, { type: 'requireconnection', event } );
+        this.forceReconnect();
+    },
+
+    handleOffline( event ) {
+        this.setTimer( false );
+        this.disconnected();
+        clearTimeout( this.timer );
+        this.doLog('%cAdvancedSocket.Event', this.debugStyle, { type: 'offline', event });
+    },
+
+    handleOnline( event ) {
+        this.doLog('%cAdvancedSocket.Event', this.debugStyle, { type: 'online', event });
+        this.checkConnection();
+    },
+
+    async ping( url ) {
+        this.doLog( '%cAdvancedSocket.ping', this.debugStyle );
+
+        const controller = new AbortController();
+        const timeoutId  = setTimeout( () => {
+            controller.abort();
+            // fire event
+            this.dispatchEvent( 'connectiontimeout' );
+        }, 5000 );
+
+        try {
+            // create form data to post
+            const formData = new FormData();
+            formData.append( 'clientID', this.clientID );
+            formData.append( 'channels', this.options.channels );
+
+            // send the ping
+            const response = await fetch( this.options.pingUrl, {
+                method : 'POST',
+                body   : formData,
+                signal : controller.signal
+            } );
+
+            clearTimeout( timeoutId );
+
+            if ( response.ok ) {
+                const data = await response.json();
+
+                if ( data.success === true )
+                    this.dispatchEvent( 'goodconnection' );
+                else
+                    this.dispatchEvent( 'requireconnection' );
+            }
+            else {
+                this.dispatchEvent( 'connectionerror' );
+            }
+        }
+        catch ( error ) {
+            if ( error.name === 'AbortError' )
+                return;
+            this.dispatchEvent( 'connectionerror' );
+        }
+        finally {
+            this.checkConnection();
+        }
+    },
+
+    processAuthentication( response ) {
+        this.doLog( '%cAdvancedSocket.processAuthenticationResponse', this.debugStyle, response );
+
+        if( response.code === -1 ) {
+            this.doLog( '%cAdvancedSocket -> Authentication failed', this.debugStyle );
+        }
+        else if( response.code === 0 ) {
+            this.subscribe();
+            // set our autoconnect to true after running initial connect
+            this.autoConnect = true;
+            this.checkConnection();
+        }
+        this.connected();
+    },
+
+    processMessage( message ) {
+        this.doLog( '%cAdvancedSocket.processMessage', this.debugStyle, message );
+
+        if ( message.type === 'data' ) {
+
+            if ( this.options.doMessage && !this.doMessageFunc )
+                this.doMessageFunc = window[this.options.doMessage];
+
+
+            if ( message.data === 'FORCE-RECONNECT')
+                setTimeout( () => this.forceReconnect(), this.options.reconnectTimer );
+
+            if ( this.doMessageFunc && typeof this.doMessageFunc === 'function' )
+                this.doMessageFunc( message );
+            else
+                this.doLog('%cAdvancedSocket : Create a doMessage function and pass it in the data-do-message attribute of the body', this.debugStyle );
+        }
+    },
+
+    setTimer( isOnline ) {
+        this.doLog( '%cAdvancedSocket.setTimer', this.debugStyle , { isOnline } );
+        if ( !isOnline ) {
+            // speed up timer to check
+            this.timerCount = this.options.offlineTimer;
+        } else if ( this.timerCount !== this.options.onlineTimer ) {
+            // return back to normal
+            this.timerCount = this.options.onlineTimer;
+        }
+    },
+
+    setupListeners() {
+        this.doLog( '%cAdvancedSocket.setupListeners', this.debugStyle );
+        window.addEventListener( 'connectionerror', this.handleConnectionError.bind(this) );
+        window.addEventListener( 'goodconnection', this.handleGoodConnection.bind(this) );
+        window.addEventListener( 'requireconnection', this.handleRequireConnection.bind(this) );
+        window.addEventListener( 'offline', this.handleOffline.bind(this), false );
+        window.addEventListener( 'online', this.handleOnline.bind(this), false );
+    },
+
+    subscribe() {
+        this.doLog( '%cAdvancedSocket.subscribe', this.debugStyle );
+
+        if ( typeof this.options.channels === 'string' )
+            this.options.channels = this.options.channels.split(',');
+
+        this.options.channels.forEach( (value,index) => {
+            this.doLog( `%c\tSubscribing to ${value} : ${index+1} of ${this.options.channels.length}` , this.debugStyle );
+            let params = { clientinfo: this.clientInfo };
+            // send username info if in clientInfo struct
+            if ( this.clientInfo.username )
+                params.username = this.clientInfo.username;
+            window[this.options.name].subscribe(value,params);
         });
     },
-    forceReconnect: function() {
-        AdvancedSocket.doLog("AdvancedSocket : forceReconnect");
-        window[AdvancedSocket.name].closeConnection();
-        window[AdvancedSocket.name].openConnection();
+
+    /**
+     * The following functions are called by the CFWebSocketWrapper
+     * therefore they need to reference the AdvancedSocket object directly
+     * instead of using the 'this' keyword
+     */
+    onClose( data ) {
+        const self = AdvancedSocket;
+
+        self.doLog( '%cAdvancedSocket.onClose', self.debugStyle, data );
     },
-    setTimer: function(isOnline) {
-        AdvancedSocket.doLog("setTimer", isOnline);
-        if (isOnline === false) {
-            AdvancedSocket.timerCount = AdvancedSocket.offlineTimer;
-        } else if (AdvancedSocket.timerCount !== AdvancedSocket.onlineTimer) {
-            AdvancedSocket.timerCount = AdvancedSocket.onlineTimer;
+
+    onError( error ) {
+        const self = AdvancedSocket;
+
+        self.doLog( '%AdvancedSocket.onError', self.debugStyle, error );
+    },
+
+    onMessage( message ) {
+        const self = AdvancedSocket;
+
+        self.doLog( '%cAdvancedSocket.onMessage', self.debugStyle, message );
+
+        switch ( message.reqType ) {
+            case 'welcome':
+                self.clientID = message.clientid;
+                self.connecting();
+                break;
+            case 'authenticate':
+                self.processAuthentication( message );
+                break;
+            case 'subscribe':
+                self.connected();
+                break;
+            default:
+                self.processMessage( message );
+                break;
         }
     },
-    disconnected: function() {
-        AdvancedSocket.doLog("AdvancedSocket : disconnected");
-        if (AdvancedSocket.statusLabel) {
-            AdvancedSocket.statusLabel.className = "alert alert-danger text-center";
-            AdvancedSocket.statusLabel.innerHTML = "We are disconnected!!!";
+
+    onOpen() {
+        const self = AdvancedSocket;
+
+        self.doLog( '%cAdvancedSocket.onOpen', self.debugStyle );
+
+        // if we need to re-authenticate ( fired on a force reconnect )
+        if ( self.clientInfo.username && self.clientInfo.password && self.autoConnect ){
+            self.autoConnect = false;
+            window[ self.options.name ].authenticate( self.clientInfo.username, self.clientInfo.password );
         }
+
+        // go fetch the info for this client
+        if ( self.options.ipApiLookup )
+            self.getIPInfo();
+        else if ( self.options.autoConnect )
+            self.subscribe();
     },
-    connecting: function() {
-        AdvancedSocket.doLog("AdvancedSocket : connecting");
-        if (AdvancedSocket.statusLabel) {
-            AdvancedSocket.statusLabel.className = "alert alert-warning text-center";
-            AdvancedSocket.statusLabel.innerHTML = "We are connecting ...";
-        }
+
+    /**
+     * The following functions should be overwritten by the user
+     * to customize experience
+     */
+    disconnected() {
+        this.doLog( '%cAdvancedSocket.disconnected', this.debugStyle );
+        if ( this.ui.statusLabel )
+            this.ui.statusLabel.innerHTML = 'We are disconnected!!!';
     },
-    connected: function() {
-        AdvancedSocket.doLog("AdvancedSocket : connected");
-        if (AdvancedSocket.statusLabel) {
-            AdvancedSocket.statusLabel.className = "alert alert-success text-center";
-            AdvancedSocket.statusLabel.innerHTML = "We are connected!!!";
-        }
-    }
+
+    connecting() {
+        this.doLog( '%cAdvancedSocket.connecting', this.debugStyle );
+        if ( this.ui.statusLabel )
+            this.ui.statusLabel.innerHTML = 'We are connecting ...';
+    },
+
+    connected () {
+        this.doLog( '%cAdvancedSocket.connected', this.debugStyle );
+        if ( this.ui.statusLabel )
+            this.ui.statusLabel.innerHTML = 'We are connected!!!';
+    },
+
+    // for debugging
+    doLog : (
+        AdvancedSocketDebug ?
+        console.log.bind( window.console ) :
+        function() {}
+    )
 };
 
-AdvancedSocket.doLog = AdvancedSocket.debug === true && window.console ? console.log.bind(window.console) : function() {};
-
+// initialize
 AdvancedSocket.init();
+

@@ -1,10 +1,20 @@
-module.exports = function(grunt) {
+module.exports = function( grunt ) {
 
+    // tasks
+    grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.loadNpmTasks('grunt-eslint');
+    grunt.loadNpmTasks('grunt-terser');
+
+    // register tasks
+    grunt.registerTask('build',   ['eslint','concat','terser']);
+    grunt.registerTask('default', ['build']);
+
+    // initialize
     grunt.initConfig({
 
-        pkg: grunt.file.readJSON('package.json'),
+        pkg : grunt.file.readJSON('package.json'),
 
-        banner: [
+        banner : [
             ' // ----------------------------------------------------------------------------',
             ' // <%= pkg.description %>',
             ' // v<%= pkg.version %> - released <%= grunt.template.today("yyyy-mm-dd HH:MM") %>',
@@ -13,55 +23,43 @@ module.exports = function(grunt) {
             ' // <%= pkg.homepage %>',
             ' // ----------------------------------------------------------------------------',
             ' // Copyright (C) 2013-<%= grunt.template.today("yyyy") %> <%= pkg.author %>',
-            ' // <%= pkg.authorsite %>',
             ' // ----------------------------------------------------------------------------',
             '\n'
         ].join('\n'),
 
-        jshint: {
-            files: ['gruntfile.js', 'src/**/*.js'],
-			options:{
-                eqeqeq      : true,
-                evil        : true,
-                strict      : false,
-                esversion   : 6
-            }
+        concat: {
+            options: {
+                stripBanners: true,
+                banner: '<%= banner %>',
+            },
+            dist: {
+                src: ['src/advancedsocket.js'],
+                dest: 'dist/advancedsocket.full.js',
+            },
         },
 
-        uglify: {
+        eslint: {
+            files: [
+                'gruntfile.js',
+                'src/**/*.js',
+            ],
+        },
+
+        terser: {
             options: {
-                banner: '<%= banner %>'
+                format : {
+                    ecma        : 2016,
+                    quote_style : 3
+                }
             },
-            js: {
-                options: {
-                    mangle  	: false,
-                    compress 	: false,
-                    beautify 	: true,
-	                screwIE8    : true
-                },
-                src: 'src/advancedsocket.js',
-                dest: 'dist/advancedsocket.full.js'
-            },
-            jsmin: {
-                options: {
-                    mangle: true,
-                    compress: {
-	                    unused          : false,
-	                    dead_code       : false,
-	                    warnings        : false,
-	                    drop_console    : false
-	                }
-                },
-                src: 'dist/advancedsocket.full.js',
-                dest: 'dist/advancedsocket.min.js'
+            js : {
+                files : [{
+                    expand : true,
+                    src    : 'dist/*.full.js',
+                    ext    : '.min.js'
+                }]
             }
-        }
+        },
     });
-
-    grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-contrib-uglify');
-
-    grunt.registerTask('build',   ['jshint', 'uglify']);
-    grunt.registerTask('default', ['build']);
 
 };

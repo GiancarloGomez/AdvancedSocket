@@ -1,10 +1,10 @@
 {
   "name": "advancedsocket",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "versionDetails": "Updated onMessage to allow using dot notation when passing in a function name to use",
   "description": "AdvancedSocket aims to help handling connectivity issues from the client side when using ColdFusion WebSocket solution.",
-  "homepage": "https://github.com/GiancarloGomez/AdvancedSocket#readme",
-  "author": "Giancarlo Gomez <giancarlo.gomez@gmail.com> (https://giancarlogomez.com/)",
+  "homepage": "https://github.com/GiancarloGomez/AdvancedSocket",
+  "author": "Giancarlo Gomez <giancarlo.gomez@gmail.com> (https://giancarlogomez.dev/)",
   "license": "MIT",
   "files": [
     "/dist"
@@ -19,16 +19,16 @@
     "type": "patreon",
     "url": "https://www.patreon.com/giancarlogomez"
   },
-  "devDependencies": {
-    "grunt": "^1.0.4",
-    "grunt-contrib-jshint": "^1.1.0",
-    "grunt-contrib-uglify": "^1.0.1"
-  },
   "bugs": {
     "url": "https://github.com/GiancarloGomez/AdvancedSocket/issues"
   },
-  "dependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "scripts": {},
+  "devDependencies": {
+    "eslint": "^7.28.0",
+    "grunt": "^1.4.1",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-eslint": "^23.0.0",
+    "grunt-terser": "^2.0.0",
+    "terser": "^5.7.0"
   }
 }

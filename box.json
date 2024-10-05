@@ -1,7 +1,7 @@
 {
     "name":"AdvancedSocket",
     "slug":"advancedsocket",
-    "version":"1.0.4",
+    "version":"2.0.0",
     "author":"Giancarlo Gomez <giancarlo.gomez@gmail.com>",
     "location":"GiancarloGomez/AdvancedSocket",
     "homepage":"https://github.com/GiancarloGomez/AdvancedSocket",
@@ -49,6 +49,5 @@
             "type":"MIT",
             "URL":"https://github.com/GiancarloGomez/AdvancedSocket/blob/master/LICENSE"
         }
-    ],
-    "scripts":{}
+    ]
 }
